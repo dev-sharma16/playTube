@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema(
         },
         refreshToken: {
             type: String,
-            required: true
+            // required: true
         }
     },
     {
@@ -55,7 +55,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next(); //* if the password is not modified then dont need to hash again
 
-    this.password = bcrypt.hash(this.password, 10)
+    this.password = await bcrypt.hash(this.password, 10)
     next()
 })
 
