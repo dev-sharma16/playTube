@@ -14,6 +14,13 @@ app.use(express.urlencoded({extended: true, limit: "16kb"})) //? this is url enc
 app.use(express.static("public")) //? this for creating folder of asset which can be used by anyone, and public is folder name 
 app.use(cookieParser()) //? this is for CRUD operation in the user's browser cookies
 
+//* routes
+import userRouter from './routes/user.routes.js'
 
+//* routes declaration
+app.use("/api/v1/users", userRouter)
+
+//* this is how route will look when the control is passed 
+//?  http://localhost:8000/api/v1/users/register 
 
 export { app }
