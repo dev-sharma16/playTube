@@ -3,13 +3,20 @@ import { ApiErrors } from "../utils/apiError.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/apiResponse.js"
+import jwt from "jsonwebtoken"
 
-const generateAccessAndRefreshToken = async(req,res) => {
+const generateAccessAndRefreshToken = async(userId) => {
     try {
+        if(!userId) throw new ApiErrors(400, "User ID is required for generating tokens");
+        
         const user =  await User.findById(userId);
+        if(!userId) throw new ApiErrors(404, "User not found for generating token");
 
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
+        if (!accessToken || !refreshToken) {
+            throw new ApiErrors(500, "Token generation failed");
+        }
 
         user.refreshToken = refreshToken
         await user.save({validateBeforeSave: false}) //* while because we are saving only one field and it don't have password with them, so we need to add 'validateBeforeSave' and due to that mongoDB don't need validation
@@ -19,7 +26,7 @@ const generateAccessAndRefreshToken = async(req,res) => {
         return { accessToken, refreshToken }
 
     } catch (error) {
-        throw new ApiErrors(500, "Something went Wrong while generating its refresh or access token")
+        throw new ApiErrors(500, `Something went Wrong while generating its refresh or access token : ${error}`)
     }
 }
 
@@ -112,7 +119,7 @@ const loginUser = asyncHandler ( async (req,res) => {
 
     const {email, username, password} = req.body;
 
-    if(!username || !email) throw new ApiErrors(400, "Username or email is Required");
+    if(!username && !email) throw new ApiErrors(400, "Username or email is Required");
 
     const user = await User.findOne({
         $or: [{username}, {email}]
@@ -126,7 +133,7 @@ const loginUser = asyncHandler ( async (req,res) => {
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
 
-    const loggedInUser = await User.findById(user._id).select("-password", "-refreshToken") //* removing the passwrod and refreshToken from 'user' object 
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken") //* removing the passwrod and refreshToken from 'user' object 
 
     // ? When we pass 'true' in the 'httOnly' and 'secure' then the 'Cookies' become unEditable from the frontend
     const options = {
@@ -183,4 +190,39 @@ const logoutUser = asyncHandler ( async (req,res) => {
     )
 })
 
-export { registerUser, loginUser, logoutUser }
+const refreshAccessToken = asyncHandler ( async (req, res) => {
+    const incomingRefreshToken = req.cookies.accessToken || req.cookies.refreshToken  
+    if(!incomingRefreshToken) throw new ApiErrors(401, "Unautherized Request");
+
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+    
+        const user = await User.findById(decodedToken?._id)
+        if(!user) throw new ApiErrors(401, "Invalid Refresh Token Request");
+    
+        if(incomingRefreshToken !== user?.refreshToken) throw new ApiErrors(401, "Refresh token is expired or used")
+        
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+    
+        const {newAccessToken, newRefreshToken} = await generateAccessAndRefreshToken(user._id)
+    
+        return res
+        .status(200)
+        .cookie("accessToken", newAccessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {access_token: newAccessToken, refresh_token: newRefreshToken},
+                "Access token is successfully refreshed.!"
+            )
+        )
+    } catch (error) {
+        throw new ApiErrors(400, `Unabled to refresh the access token : ${error}`)
+    }
+})
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken }
