@@ -1,9 +1,9 @@
 // ? a middleware for authenticating the logined user
 
-import { ApiErrors } from "../utils/apiError";
-import { asyncHandler } from "../utils/asyncHandler";
+import { ApiErrors } from "../utils/apiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.model"
+import { User } from "../models/user.model.js";
 
 export const verifyJwt = asyncHandler( async (req, res, next) => {
 
@@ -20,7 +20,7 @@ export const verifyJwt = asyncHandler( async (req, res, next) => {
         
         req.user = user; //* adding the user object in this we access it like 'req.user' just like 'req.body' in function which runs after that middleware
 
-        next()
+        next();
 
     } catch (error) {
         throw new ApiErrors(401, error?.message || "Invalid access token")
