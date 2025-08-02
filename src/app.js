@@ -18,11 +18,13 @@ app.use(cookieParser()) //? this is for CRUD operation in the user's browser coo
 import userRouter from './routes/user.routes.js'
 import tweetRouter from './routes/tweet.routes.js'
 import subscriptionRouter from './routes/subscription.routes.js'
+import videoRoutes from './routes/video.routes.js'
 
 //* routes declaration
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/subscription", subscriptionRouter)
+app.use("/api/v1/video", videoRoutes)
 
 //* this is how route will look when the control is passed 
 //?  http://localhost:8000/api/v1/users/register 
