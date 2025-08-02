@@ -1,7 +1,7 @@
 import mongoose, {isValidObjectId, mongo} from "mongoose"
 import {User} from "../models/user.model.js"
 import { Subscription } from "../models/subscription.model.js"
-import {ApiError} from "../utils/apiError.js"
+import {ApiErrors} from "../utils/apiError.js"
 import {ApiResponse} from "../utils/apiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
@@ -12,14 +12,14 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     
     if(isSubscribed){
         const subscribed = await Subscription.create({subscriber: userId, channel: channelId})
-        if(!subscribed) throw new ApiError(500,"Something went wrong while subscribing.!");
+        if(!subscribed) throw new ApiErrors(500,"Something went wrong while subscribing.!");
 
         return res.status(201).json(
             new ApiResponse(201,subscribed,"Channel subscribed successfully.!")
         )
     } else {
         const unSubscribing = await Subscription.findByIdAndDelete(channelId)
-        if(unSubscribing) throw new ApiError(500,"Something went wrong while un-subscribing.!");
+        if(unSubscribing) throw new ApiErrors(500,"Something went wrong while un-subscribing.!");
 
         return res.status(201).json(
             new ApiResponse(201,{},"Channel un-subscribed successfully.!")
