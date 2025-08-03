@@ -19,12 +19,18 @@ import userRouter from './routes/user.routes.js'
 import tweetRouter from './routes/tweet.routes.js'
 import subscriptionRouter from './routes/subscription.routes.js'
 import videoRoutes from './routes/video.routes.js'
+import playlistRoutes from './routes/playlist.routes.js'
+import likeRoutes from './routes/like.routes.js'
+import commentRoutes from './routes/comment.route.js'
 
 //* routes declaration
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/subscription", subscriptionRouter)
 app.use("/api/v1/video", videoRoutes)
+app.use("/api/v1/playlist", playlistRoutes)
+app.use("/api/v1/like", likeRoutes)
+app.use("/api/v1/comment", commentRoutes)
 
 //* this is how route will look when the control is passed 
 //?  http://localhost:8000/api/v1/users/register 
